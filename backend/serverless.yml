@@ -9,6 +9,10 @@ provider:
   name: aws
   runtime: nodejs12.x
 
+  tracing:
+    lambda: true
+    apiGateway: true
+
   logs:
     restApi: true
 
@@ -56,6 +60,9 @@ functions:
           method: post
           path: todos
           authorizer: Auth
+          request:
+            scehma:
+              application/json: ${file(models/create-todo-request.json)}
           cors: true
     iamRoleStatements:
       - Effect: Allow
@@ -76,11 +83,15 @@ functions:
           path: todos/{todoId}
           authorizer: Auth
           cors: true
+          request:
+            scehma:
+              application/json: ${file(models/update-todo-request.json)}
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:Update*
           - dynamodb:GetItem
+          - dynamodb:Query
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
@@ -117,6 +128,11 @@ functions:
           authorizer: Auth
           cors: true
     iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:GetItem
@@ -191,14 +207,14 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.CONNECTIONS_TABLE}
 
-    RequestBodyValidator:
-      Type: AWS::ApiGateway::RequestValidator
-      Properties:
-        Name: 'request-body-validator'
-        RestApiId:
-          Ref: ApiGatewayRestApi
-        ValidateRequestBody: true
-        ValidateRequestParameters: false
+    # RequestBodyValidator:
+    #   Type: AWS::ApiGateway::RequestValidator
+    #   Properties:
+    #     Name: 'request-body-validator'
+    #     RestApiId:
+    #       Ref: ApiGatewayRestApi
+    #     ValidateRequestBody: true
+    #     ValidateRequestParameters: false
 
     AttachmentsBucket:
       Type: AWS::S3::Bucket

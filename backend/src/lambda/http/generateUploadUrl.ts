@@ -3,6 +3,8 @@ import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 import * as AWS  from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
+import { updateAttachmentUrl } from '../businessLogic/todos'
+import { getUserId } from '../utils'
 
 const XAWS = AWSXRay.captureAWS(AWS)
 
@@ -16,7 +18,9 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const todoId = event.pathParameters.todoId
 
   // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
+  const userId = getUserId(event)
   const url = getUploadUrl(todoId)
+  await updateAttachmentUrl(userId, todoId)
 
   return {
     statusCode: 201,

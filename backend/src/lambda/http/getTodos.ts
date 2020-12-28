@@ -1,12 +1,8 @@
 import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-const AWS = require('aws-sdk')
 import { getUserId } from '../utils'
-
-const docClient = new AWS.DynamoDB.DocumentClient()
-
-const todosTable = process.env.TODOS_TABLE
+import { getTodos } from '../businessLogic/todos'
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   // TODO: Get all TODO items for a current user
@@ -36,18 +32,4 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     })
   }
   
-}
-
-async function getTodos(userId: string) {
-  const result = await docClient.query({
-    TableName: todosTable,
-    IndexName: process.env.TODO_ID_INDEX,
-    KeyConditionExpression: 'userId = :userId',
-    ExpressionAttributeValues: {
-      ':userId': userId
-    },
-    ScanIndexForward: false
-  }).promise()
-
-  return result.Items
 }
